@@ -39,6 +39,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = LimitOffsetPagination
 
+
 class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с комментариями."""
 
