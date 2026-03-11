@@ -2,6 +2,7 @@
 
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, viewsets
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly
@@ -17,12 +18,22 @@ from .serializers import (
 )
 
 
+class OptionalLimitOffsetPagination(LimitOffsetPagination):
+    """Пагинация только при наличии limit/offset в запросе."""
+
+    def paginate_queryset(self, queryset, request, view=None):
+        if 'limit' not in request.query_params and 'offset' not in request.query_params:
+            return None
+        return super().paginate_queryset(queryset, request, view)
+
+
 class PostViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с публикациями."""
 
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    pagination_class = OptionalLimitOffsetPagination
 
     def perform_create(self, serializer):
         """Сохранение автора публикации."""
