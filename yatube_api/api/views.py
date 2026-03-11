@@ -37,7 +37,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
+    pagination_class = LimitOffsetPagination
 
 class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с комментариями."""
