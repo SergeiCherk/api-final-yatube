@@ -18,25 +18,13 @@ from .serializers import (
 )
 
 
-class OptionalLimitOffsetPagination(LimitOffsetPagination):
-    """Пагинация только при наличии limit/offset в запросе."""
-
-    def paginate_queryset(self, queryset, request, view=None):
-        if (
-            'limit' not in request.query_params
-            and 'offset' not in request.query_params
-        ):
-            return None
-        return super().paginate_queryset(queryset, request, view)
-
-
 class PostViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с публикациями."""
 
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    pagination_class = OptionalLimitOffsetPagination
+    pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
         """Сохранение автора публикации."""
@@ -57,15 +45,17 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
 
+    def get_post(self):
+        """Получение поста из URL."""
+        return get_object_or_404(Post, pk=self.kwargs.get('post_id'))
+
     def get_queryset(self):
         """Получение комментариев к конкретной публикации."""
-        post = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
-        return post.comments.all()
+        return self.get_post().comments.all()
 
     def perform_create(self, serializer):
         """Сохранение автора комментария и публикации."""
-        post = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
-        serializer.save(author=self.request.user, post=post)
+        serializer.save(author=self.request.user, post=self.get_post())
 
 
 class FollowViewSet(
